@@ -3,6 +3,7 @@ package com.DoIt2.Flip.domain.auth.service;
 import com.DoIt2.Flip.domain.auth.dto.SignupRequest;
 import com.DoIt2.Flip.domain.user.entity.User;
 import com.DoIt2.Flip.domain.user.enums.Role;
+import com.DoIt2.Flip.domain.user.enums.Theme;
 import com.DoIt2.Flip.domain.user.repository.UserRepository;
 import com.DoIt2.Flip.global.cookie.CookieUtil;
 import com.DoIt2.Flip.global.env.EnvLoader;
@@ -12,11 +13,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -28,6 +31,7 @@ public class AuthService {
     private final UserRepository userRepository;
 
     public void signup(SignupRequest request) {
+
         // 1. 사용자 아이디 중복 체크
         if (userRepository.existsByEmail(request.getUsername())) {
             throw new IllegalAccessError("이미 존재하는 계정입니다.");
@@ -39,6 +43,8 @@ public class AuthService {
         User user = User.builder()
                 .email(request.getUsername())
                 .password(encodedPassword)
+                .name(request.getName())
+                .theme(Theme.black)
                 .role(Role.USER)
                 .build();
 

@@ -81,7 +81,7 @@ public class SecurityConfig {
 
         // 경로별 인가 작업
         http.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/reissue").permitAll()
                         .anyRequest().authenticated());
@@ -90,8 +90,15 @@ public class SecurityConfig {
         http.addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
         // 직접 만든 LoginFilter 추가
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, cookieUtil, redisTokenService, userService),
-                UsernamePasswordAuthenticationFilter.class);
+        LoginFilter loginFilter = new LoginFilter(
+                authenticationManager(authenticationConfiguration),
+                jwtUtil,
+                cookieUtil,
+                redisTokenService,
+                userService
+        );
+        loginFilter.setFilterProcessesUrl("/api/auth/login");
+        http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
         // 직접 만든 LogoutFilter 추가
         http.addFilterBefore(new CustomLogoutFilter(jwtUtil, redisTokenService), LogoutFilter.class);

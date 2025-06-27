@@ -9,6 +9,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.util.Collection;
 import java.util.Iterator;
 
+@Slf4j
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -36,6 +38,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = obtainUsername(request);
         String password = obtainPassword(request);
 
+        log.info("🔍 username: {}", username);
+        log.info("🔍 password: {}", password);
+
         // 스프링 시큐리티에서 username과 password를 검증하기 위해서는 token에 담아야 함
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
 
@@ -50,7 +55,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         // 1. User 정보 가져오기
         String username = authentication.getName();
-        User user = userService.getByUsername(username);
+        User user = userService.getByEmail(username);
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
@@ -58,11 +63,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         // 2. token 생성
-        String access = jwtUtil.createJwt("access token", user.getUserId().toString(), username, role, (long) EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000));
-        String refresh = jwtUtil.createJwt("refresh token", user.getUserId().toString(), username, role, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
+        String access = jwtUtil.createJwt("access token", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000));
+        String refresh = jwtUtil.createJwt("refresh token", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
 
         // 3. refresh 토큰 저장
-        redisTokenService.saveRefreshToken(user.getUserId().toString(), refresh, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
+        redisTokenService.saveRefreshToken(user.getId().toString(), refresh, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
 
         // 4. response의 Header에 담음 (HTTP 인증 방식은 RFC 7235 정의에 따라 아래 인증 헤더 형태를 따름)
         response.addHeader("Authorization", "Bearer " + access);

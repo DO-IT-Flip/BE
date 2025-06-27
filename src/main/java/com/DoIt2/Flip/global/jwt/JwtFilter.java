@@ -78,7 +78,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String role = jwtUtil.getRole(token);
 
         User user = User.builder()
-                .userId(UUID.fromString(id))
+                .id(UUID.fromString(id))
                 .email(username)
                 .role(Role.USER)
                 .build();

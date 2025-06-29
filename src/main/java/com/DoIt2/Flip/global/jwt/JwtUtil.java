@@ -53,7 +53,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .claim("category", category) // 토큰 종류
-                .claim("userid", userId)
+                .claim("id", userId)
                 .claim("username", username) // (토큰 payload 에) 특정 키에 대한 데이터 삽입
                 .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis())) // 토큰 발행 시간

@@ -58,17 +58,14 @@ public class AuthService {
         for (Cookie cookie : cookies) {
 
             if (cookie.getName().equals("refresh")) {
-
                 refresh = cookie.getValue();
             }
         }
 
         if (refresh == null) {
-
             //response status code
             return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
         }
-
 
         //expired check
         try {

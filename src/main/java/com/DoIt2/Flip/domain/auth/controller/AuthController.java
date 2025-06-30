@@ -21,7 +21,6 @@ public class AuthController {
         return ResponseEntity.ok("회원가입 성공");
     }
 
-
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
         return ResponseEntity.ok(authService.reissue(request, response));

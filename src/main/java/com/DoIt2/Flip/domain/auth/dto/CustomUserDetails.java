@@ -13,6 +13,10 @@ public class CustomUserDetails implements UserDetails {
 
     private final User user;
 
+    public String getUserId() {
+        return user.getId().toString();
+    }
+
     @Override
     public String getUsername() {
         return user.getEmail();

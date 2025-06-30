@@ -13,7 +13,6 @@ public class EnvLoaderApplicationContextInitializer implements ApplicationContex
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         Dotenv dotenv = Dotenv.configure()
-                .directory("./config") // .env 파일 위치
                 .filename(".env")  // 기본 파일명
                 .ignoreIfMissing() // 없을 경우 무시
                 .load();

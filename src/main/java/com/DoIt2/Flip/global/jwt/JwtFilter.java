@@ -59,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 4. 토큰이 access 인지 확인
         String category = jwtUtil.getCategory(token);
-        if (!category.equals("access")) {
+        if (!category.equals("access token")) {
 
             // response body
             PrintWriter writer = response.getWriter();
@@ -80,7 +80,7 @@ public class JwtFilter extends OncePerRequestFilter {
         User user = User.builder()
                 .id(UUID.fromString(id))
                 .email(username)
-                .role(Role.USER)
+                .role(Role.valueOf(role))
                 .build();
 
         // 6. UserDetails에 회원 정보 객체 담기

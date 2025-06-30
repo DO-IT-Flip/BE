@@ -25,7 +25,9 @@ repositories {
 
 
 dependencies {
-	// Web, JPA, Security, Validation
+	// Web, JPA, Security, Validation, Lombok
+	compileOnly("org.projectlombok:lombok:1.18.32")
+	annotationProcessor("org.projectlombok:lombok:1.18.32")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -35,15 +37,16 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 
 	// JWT
-	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+	implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
 	// AWS S3 SDK (for Cloudflare R2)
 	implementation("software.amazon.awssdk:s3:2.20.63")
 
 	// redis
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
 
 	// OpenAPI (Swagger)
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
@@ -52,6 +55,8 @@ dependencies {
 	implementation("io.github.cdimascio:java-dotenv:5.2.2")
 
 	// Test
+	testCompileOnly("org.projectlombok:lombok:1.18.32")
+	testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
@@ -59,4 +64,8 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.bootJar {
+	archiveFileName.set("app.jar")
 }

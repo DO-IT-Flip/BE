@@ -1,0 +1,102 @@
+package com.DoIt2.Flip.domain.schedule.controller;
+
+import com.DoIt2.Flip.domain.schedule.dto.ScheduleRequest;
+import com.DoIt2.Flip.domain.schedule.dto.ScheduleResponse;
+import com.DoIt2.Flip.domain.schedule.service.ScheduleService;
+import com.DoIt2.Flip.domain.auth.dto.CustomUserDetails;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/schedules")
+public class ScheduleController {
+
+    private final ScheduleService scheduleService;
+
+    public ScheduleController(ScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
+    }
+
+    /**
+     * 스케줄 생성
+     */
+    @PostMapping
+    public ResponseEntity<ScheduleResponse> createSchedule(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ScheduleRequest request
+    ) {
+        String userId = userDetails.getUserId(); // 토큰에서 userId 추출
+        ScheduleResponse response = scheduleService.createSchedule(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 스케줄 전체 조회 (태그 포함)
+     */
+    @GetMapping
+    public ResponseEntity<List<ScheduleResponse>> getAllSchedules(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        String userId = userDetails.getUserId();
+        List<ScheduleResponse> response = scheduleService.getAllSchedules(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 특정 날짜(year, month, day)로 필터링
+     * 예시: /api/schedules?year=2025&month=6&day=29
+     */
+    @GetMapping(params = {"year", "month", "day"})
+    public ResponseEntity<List<ScheduleResponse>> getSchedulesByDate(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam int day
+    ) {
+        String userId = userDetails.getUserId();
+        List<ScheduleResponse> response = scheduleService.getSchedulesByDate(userId, year, month, day);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 키워드로 일정 검색
+     * 예: /api/schedules/search?keyword=운동
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<ScheduleResponse>> searchSchedules(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String keyword
+    ) {
+        String userId = userDetails.getUserId();
+        List<ScheduleResponse> response = scheduleService.searchSchedules(userId, keyword);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{scheduleId}")
+    public ResponseEntity<ScheduleResponse> updateSchedule(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long scheduleId,
+            @RequestBody ScheduleRequest request
+    ) {
+        String userId = userDetails.getUserId();
+        ScheduleResponse response = scheduleService.updateSchedule(userId, scheduleId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{scheduleId}")
+    public ResponseEntity<Void> deleteSchedule(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long scheduleId
+    ) {
+        String userId = userDetails.getUserId();
+        scheduleService.deleteSchedule(userId, scheduleId);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
+
+
+}

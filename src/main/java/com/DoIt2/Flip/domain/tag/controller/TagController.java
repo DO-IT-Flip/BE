@@ -3,6 +3,7 @@ package com.DoIt2.Flip.domain.tag.controller;
 import com.DoIt2.Flip.domain.tag.DTO.TagRequest;
 import com.DoIt2.Flip.domain.tag.DTO.TagResponse;
 import com.DoIt2.Flip.domain.tag.service.TagService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,13 +11,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tags")
+@RequiredArgsConstructor
 public class TagController {
 
     private final TagService tagService;
-
-    public TagController(TagService tagService) {
-        this.tagService = tagService;
-    }
 
     @PostMapping
     public ResponseEntity<TagResponse> createTag(@RequestBody TagRequest request) {

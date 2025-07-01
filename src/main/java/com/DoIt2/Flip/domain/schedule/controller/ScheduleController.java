@@ -4,6 +4,7 @@ import com.DoIt2.Flip.domain.schedule.dto.ScheduleRequest;
 import com.DoIt2.Flip.domain.schedule.dto.ScheduleResponse;
 import com.DoIt2.Flip.domain.schedule.service.ScheduleService;
 import com.DoIt2.Flip.domain.auth.dto.CustomUserDetails;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,16 +14,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedules")
+@RequiredArgsConstructor
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
 
-    public ScheduleController(ScheduleService scheduleService) {
-        this.scheduleService = scheduleService;
-    }
-
     /**
-     * 스케줄 생성
+     *  스케줄 생성
      */
     @PostMapping
     public ResponseEntity<ScheduleResponse> createSchedule(
@@ -35,7 +33,7 @@ public class ScheduleController {
     }
 
     /**
-     * 스케줄 전체 조회 (태그 포함)
+     *  스케줄 전체 조회 (태그 포함)
      */
     @GetMapping
     public ResponseEntity<List<ScheduleResponse>> getAllSchedules(
@@ -47,7 +45,7 @@ public class ScheduleController {
     }
 
     /**
-     * 특정 날짜(year, month, day)로 필터링
+     *  특정 날짜(year, month, day)로 필터링
      * 예시: /api/schedules?year=2025&month=6&day=29
      */
     @GetMapping(params = {"year", "month", "day"})
@@ -63,7 +61,7 @@ public class ScheduleController {
     }
 
     /**
-     * 키워드로 일정 검색
+     *  키워드로 일정 검색
      * 예: /api/schedules/search?keyword=운동
      */
     @GetMapping("/search")
@@ -76,6 +74,9 @@ public class ScheduleController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     *  스케줄 수정
+     */
     @PatchMapping("/{scheduleId}")
     public ResponseEntity<ScheduleResponse> updateSchedule(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -87,6 +88,9 @@ public class ScheduleController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     *  스케줄 삭제
+     */
     @DeleteMapping("/{scheduleId}")
     public ResponseEntity<Void> deleteSchedule(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -96,7 +100,4 @@ public class ScheduleController {
         scheduleService.deleteSchedule(userId, scheduleId);
         return ResponseEntity.noContent().build(); // 204 No Content
     }
-
-
-
 }

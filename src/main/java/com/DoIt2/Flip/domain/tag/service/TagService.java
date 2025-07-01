@@ -6,21 +6,19 @@ import com.DoIt2.Flip.domain.tag.DTO.TagRequest;
 import com.DoIt2.Flip.domain.tag.DTO.TagResponse;
 import com.DoIt2.Flip.domain.tag.entity.Tag;
 import com.DoIt2.Flip.domain.tag.repository.TagRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TagService {
 
     private final TagRepository tagRepository;
     private final IconRepository iconRepository;
-
-    public TagService(TagRepository tagRepository, IconRepository iconRepository) {
-        this.tagRepository = tagRepository;
-        this.iconRepository = iconRepository;
-    }
 
     public TagResponse createTag(TagRequest request) {
         Icon icon = iconRepository.findById(request.getIconId()).orElse(null);
@@ -39,7 +37,8 @@ public class TagService {
     }
 
     public TagResponse updateTag(Long tagId, TagRequest request) {
-        Tag tag = tagRepository.findById(tagId).get();
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 태그가 존재하지 않습니다."));
         Icon icon = iconRepository.findById(request.getIconId()).orElse(null);
         tag.setName(request.getName());
         tag.setColor(request.getColor());

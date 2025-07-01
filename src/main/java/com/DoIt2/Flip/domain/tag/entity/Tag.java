@@ -2,44 +2,41 @@ package com.DoIt2.Flip.domain.tag.entity;
 
 import com.DoIt2.Flip.domain.icon.entity.Icon;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "tags")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tagId;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String color;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "icon_id")
     private Icon icon;
 
-    public Tag() {}
-
-    // ✅ name만 받는 생성자 추가
+    // 이름만 받는 생성자
     public Tag(String name) {
         this.name = name;
-        this.color = "gray"; // 기본 색상
-        this.icon = null;    // 기본 아이콘 없음
+        this.color = "gray";
+        this.icon = null;
     }
 
+    // name, color, icon 모두 받는 생성자 (TagService에서 사용)
     public Tag(String name, String color, Icon icon) {
         this.name = name;
         this.color = color;
         this.icon = icon;
     }
-
-    public Long getTagId() { return tagId; }
-    public String getName() { return name; }
-    public String getColor() { return color; }
-    public Icon getIcon() { return icon; }
-
-    public void setName(String name) { this.name = name; }
-    public void setColor(String color) { this.color = color; }
-    public void setIcon(Icon icon) { this.icon = icon; }
 }

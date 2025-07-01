@@ -1,23 +1,24 @@
 package com.DoIt2.Flip.domain.icon.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
+@Table(name = "icons")
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Icon {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long iconId;
 
+    @Column(nullable = false)
     private String iconName;
-    private String color;
 
-    public Icon(String iconName, String color) {
-        this.iconName = iconName;
-        this.color = color;
-    }
+    @Column(nullable = false)
+    private String color;
 }

@@ -29,5 +29,14 @@ public class EnvLoaderApplicationContextInitializer implements ApplicationContex
         applicationContext.getEnvironment()
                 .getPropertySources()
                 .addFirst(new MapPropertySource("dotenvProperties", props));
+
+
+        // ✅ DB 관련 정보만 로깅
+        String dbUsername = dotenv.get("DB_USERNAME");
+        String dbPassword = dotenv.get("DB_PASSWORD");
+
+        System.out.println("✅ [ENV CHECK] DB_USERNAME = " + dbUsername);
+        System.out.println("✅ [ENV CHECK] DB_PASSWORD = " + dbPassword);
     }
+
 }

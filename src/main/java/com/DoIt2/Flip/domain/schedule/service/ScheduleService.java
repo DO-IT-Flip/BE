@@ -12,7 +12,7 @@ import com.DoIt2.Flip.domain.tag.DTO.TagResponse;
 import com.DoIt2.Flip.domain.tag.entity.Tag;
 import com.DoIt2.Flip.domain.tag.repository.TagRepository;
 import com.DoIt2.Flip.domain.user.entity.User;
-import com.DoIt2.Flip.domain.user.repository.UserRepository;
+import com.DoIt2.Flip.domain.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,27 +25,26 @@ import java.util.UUID;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
-    private final UserRepository userRepository;
     private final IconRepository iconRepository;
     private final TagRepository tagRepository;
     private final ScheduleTagRepository scheduleTagRepository;
+    private final UserService userService;
 
     public ScheduleService(ScheduleRepository scheduleRepository,
-                           UserRepository userRepository,
                            IconRepository iconRepository,
                            TagRepository tagRepository,
-                           ScheduleTagRepository scheduleTagRepository) {
+                           ScheduleTagRepository scheduleTagRepository,
+                           UserService userService) {
         this.scheduleRepository = scheduleRepository;
-        this.userRepository = userRepository;
         this.iconRepository = iconRepository;
         this.tagRepository = tagRepository;
         this.scheduleTagRepository = scheduleTagRepository;
+        this.userService = userService;
     }
 
     @Transactional
     public ScheduleResponse createSchedule(String userId, ScheduleRequest request) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userService.getById(userId); // ✅ 진짜 유저 객체 조회
 
         Icon icon = null;
         if (request.getIconId() != null) {
@@ -54,18 +53,19 @@ public class ScheduleService {
 
         String color = (request.getColor() != null) ? request.getColor() : "gray";
 
-        Schedule schedule = new Schedule();
-        schedule.setUser(user);
-        schedule.setStartDate(request.getStartDate());
-        schedule.setEndDate(request.getEndDate());
-        schedule.setStartTime(OffsetDateTime.of(request.getStartDate(), request.getStartTime(), OffsetDateTime.now().getOffset()));
-        schedule.setEndTime(OffsetDateTime.of(request.getEndDate(), request.getEndTime(), OffsetDateTime.now().getOffset()));
-        schedule.setRepeat(request.isRepeat());
-        schedule.setTitle(request.getTitle());
-        schedule.setLocation(request.getLocation());
-        schedule.setParticipants(request.getParticipants());
-        schedule.setColor(color);
-        schedule.setIcon(icon);
+        Schedule schedule = Schedule.builder()
+                .user(user)
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .startTime(OffsetDateTime.of(request.getStartDate(), request.getStartTime(), OffsetDateTime.now().getOffset()))
+                .endTime(OffsetDateTime.of(request.getEndDate(), request.getEndTime(), OffsetDateTime.now().getOffset()))
+                .isRepeat(request.isRepeat())
+                .title(request.getTitle())
+                .location(request.getLocation())
+                .participants(request.getParticipants())
+                .color(color)
+                .icon(icon)
+                .build();
 
         Schedule saved = scheduleRepository.save(schedule);
 
@@ -83,8 +83,7 @@ public class ScheduleService {
                 .map(st -> {
                     Tag tag = st.getTag();
                     return new TagResponse(tag.getTagId(), tag.getName(), tag.getColor(), tag.getIcon().getIconId());
-                })
-                .toList();
+                }).toList();
 
         return new ScheduleResponse(
                 saved.getScheduleId(),
@@ -98,35 +97,23 @@ public class ScheduleService {
 
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getAllSchedules(String userId) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        List<Schedule> schedules = scheduleRepository.findByUser(user);
-
+        UUID uuid = UUID.fromString(userId);
+        List<Schedule> schedules = scheduleRepository.findByUser_Id(uuid);
         return mapToScheduleResponses(schedules);
     }
 
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getSchedulesByDate(String userId, int year, int month, int day) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
+        UUID uuid = UUID.fromString(userId);
         LocalDate date = LocalDate.of(year, month, day);
-        List<Schedule> schedules = scheduleRepository.findByUserAndStartDate(user, date);
-
+        List<Schedule> schedules = scheduleRepository.findByUser_IdAndStartDate(uuid, date);
         return mapToScheduleResponses(schedules);
     }
 
     @Transactional(readOnly = true)
     public List<ScheduleResponse> searchSchedules(String userId, String keyword) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        List<Schedule> schedules = scheduleRepository
-                .findByUserAndTitleContainingIgnoreCaseOrLocationContainingIgnoreCaseOrParticipantsContainingIgnoreCase(
-                        user, keyword, keyword, keyword
-                );
-
+        UUID uuid = UUID.fromString(userId);
+        List<Schedule> schedules = scheduleRepository.searchByKeyword(uuid, keyword);
         return mapToScheduleResponses(schedules);
     }
 
@@ -151,13 +138,12 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleResponse updateSchedule(String userId, Long scheduleId, ScheduleRequest request) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userService.getById(userId); // ✅ 진짜 유저 객체 조회
 
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 일정이 존재하지 않습니다."));
 
-        if (!schedule.getUser().getId().equals(UUID.fromString(userId))) {
+        if (!schedule.getUser().getId().equals(user.getId())) {
             throw new IllegalStateException("본인의 일정만 수정할 수 있습니다.");
         }
 
@@ -208,13 +194,12 @@ public class ScheduleService {
 
     @Transactional
     public void deleteSchedule(String userId, Long scheduleId) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userService.getById(userId);
 
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 일정이 존재하지 않습니다."));
 
-        if (!schedule.getUser().getId().equals(UUID.fromString(userId))) {
+        if (!schedule.getUser().getId().equals(user.getId())) {
             throw new IllegalStateException("본인의 일정만 삭제할 수 있습니다.");
         }
 

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
+    private final RedisTemplate<String, String> redisTemplate;
     private final RedisTokenService redisTokenService;
     private final UserService userService;
 
@@ -87,7 +89,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         // 직접 만든 JWTFilter 추가 (첫 번째 인자는 생성한 필터, 두 번째 인자는 필터를 넣을 위치)
-        http.addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
+        http.addFilterBefore(new JwtFilter(jwtUtil, redisTokenService), LoginFilter.class);
 
         // 직접 만든 LoginFilter 추가
         LoginFilter loginFilter = new LoginFilter(

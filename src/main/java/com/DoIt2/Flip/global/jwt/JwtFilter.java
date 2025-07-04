@@ -1,6 +1,7 @@
 package com.DoIt2.Flip.global.jwt;
 
 import com.DoIt2.Flip.domain.auth.dto.CustomUserDetails;
+import com.DoIt2.Flip.domain.auth.service.RedisTokenService;
 import com.DoIt2.Flip.domain.user.entity.User;
 import com.DoIt2.Flip.domain.user.enums.Role;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final RedisTokenService redisTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -59,7 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 4. 토큰이 access 인지 확인
         String category = jwtUtil.getCategory(token);
-        if (!category.equals("access token")) {
+        if (!category.equals("access")) {
 
             // response body
             PrintWriter writer = response.getWriter();
@@ -67,6 +69,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // response status code
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if (redisTokenService.existsBlackListAccessToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("This access token is blacklisted.");
             return;
         }
 

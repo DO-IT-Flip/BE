@@ -63,8 +63,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         // 2. token 생성
-        String access = jwtUtil.createJwt("access token", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000));
-        String refresh = jwtUtil.createJwt("refresh token", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
+        String access = jwtUtil.createJwt("access", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000));
+        String refresh = jwtUtil.createJwt("refresh", user.getId().toString(), username, role, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
 
         // 3. refresh 토큰 저장
         redisTokenService.saveRefreshToken(user.getId().toString(), refresh, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));

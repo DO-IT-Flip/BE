@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,62 +50,68 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public ResponseEntity reissue(HttpServletRequest request, HttpServletResponse response) {
-        //get refresh token
-        String refresh = null;
-        Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
+    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
+        // 1. Refresh Token 추출
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return ResponseEntity.badRequest().body("no cookies");
+
+        String refresh = null;
+        for (Cookie cookie : cookies) {
             if (cookie.getName().equals("refresh")) {
                 refresh = cookie.getValue();
             }
         }
 
-        if (refresh == null) {
-            //response status code
-            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
-        }
+        if (refresh == null) return ResponseEntity.badRequest().body("refresh token null");
 
-        //expired check
+        // 2. Refresh 토큰 유효성 검사
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
-
-            //response status code
-            return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body("refresh token expired");
         }
 
-        // 토큰이 refresh 인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-
-        if (!category.equals("refresh")) {
-
-            //response status code
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        if (!"refresh".equals(jwtUtil.getCategory(refresh))) {
+            return ResponseEntity.badRequest().body("invalid refresh token");
         }
 
         String userId = jwtUtil.getUserId(refresh);
         String username = jwtUtil.getUsername(refresh);
         String role = jwtUtil.getRole(refresh);
 
-        String redisRefreshToken = redisTokenService.getRefreshToken(userId);
-
-        if (!refresh.equals(redisRefreshToken)) {
-            return new ResponseEntity<>("no matched refresh token", HttpStatus.BAD_REQUEST);
+        String redisRefresh = redisTokenService.getRefreshToken(userId);
+        if (!refresh.equals(redisRefresh)) {
+            return ResponseEntity.badRequest().body("no matched refresh token");
         }
 
-        // make new JWT
-        String newAccess = jwtUtil.createJwt("access token", userId, username, role, (long) EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000));
-        String newRefresh = jwtUtil.createJwt("refresh token", userId, username, role, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
+        // 3. access token 추출 및 블랙리스트 처리
+        String access = null;
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            access = authHeader.substring(7);
+        }
 
-        // response
-        response.setHeader("access", newAccess);
+        if (access != null && "access".equals(jwtUtil.getCategory(access))) {
+            redisTokenService.saveBlackListAccessToken(access);
+
+        }
+
+        // 4. 새 토큰 발급
+        long accessExp = EnvLoader.getInt("JWT_ACCESS_EXPIRATION", 600000);
+        long refreshExp = EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000);
+
+        String newAccess = jwtUtil.createJwt("access", userId, username, role, accessExp);
+        String newRefresh = jwtUtil.createJwt("refresh", userId, username, role, refreshExp);
+
+        // 5. 응답 설정
+        response.setHeader("access", "Bearer " + newAccess);
         response.addCookie(cookieUtil.createCookie("refresh", newRefresh));
 
-        // refresh 토큰 저장
+        // 6. Redis refresh 갱신
         redisTokenService.deleteRefreshToken(userId);
-        redisTokenService.saveRefreshToken(userId, refresh, (long) EnvLoader.getInt("JWT_REFRESH_EXPIRATION", 86400000));
+        redisTokenService.saveRefreshToken(userId, newRefresh, refreshExp);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().build();
     }
 }

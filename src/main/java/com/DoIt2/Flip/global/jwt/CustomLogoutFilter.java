@@ -22,84 +22,78 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
         doFilter((HttpServletRequest) request, (HttpServletResponse) response, chain);
     }
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
 
-        // path and method verify
-        String requestUri = request.getRequestURI();
-        if (!requestUri.matches("/api/auth/logout")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-        String requestMethod = request.getMethod();
-        if (!requestMethod.equals("POST")) {
-
+        // 로그아웃 API 경로 + POST 요청이 아닐 경우 필터 패스
+        if (!request.getRequestURI().equals("/api/auth/logout") || !request.getMethod().equals("POST")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // get refresh token
+        // 1. 쿠키에서 refresh 토큰 추출
         String refresh = null;
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-
-            if (cookie.getName().equals("refresh")) {
-
-                refresh = cookie.getValue();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refresh")) {
+                    refresh = cookie.getValue();
+                    break;
+                }
             }
         }
 
-        // refresh null check
+        // refresh 토큰이 없으면 400
         if (refresh == null) {
-
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // expired check
+        // refresh 토큰 만료 여부 확인
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
-
-            // response status code
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-        if (!category.equals("refresh")) {
-
-            //response status code
+        // category가 refresh인지 검증
+        if (!"refresh".equals(jwtUtil.getCategory(refresh))) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
+        // 2. Authorization 헤더에서 access 토큰 추출
+        String access = null;
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            access = authHeader.substring(7);
+        }
+
+        // access 토큰 블랙리스트 등록
+        if (access != null && "access".equals(jwtUtil.getCategory(access))) {
+            redisTokenService.saveBlackListAccessToken(access);
+        }
+
+        // 3. refresh 토큰의 사용자 ID 추출 및 존재 확인
         String userId = jwtUtil.getUserId(refresh);
-
-        //DB에 저장되어 있는지 확인
-        Boolean isExist = redisTokenService.existsRefreshToken(userId);
-        if (!isExist) {
-
-            //response status code
+        if (!redisTokenService.existsRefreshToken(userId)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        //로그아웃 진행
-        //Refresh 토큰 DB에서 제거
+        // 4. Redis에서 refresh 토큰 삭제
         redisTokenService.deleteRefreshToken(userId);
 
-        //Refresh 토큰 Cookie 값 0
+        // 5. refresh 쿠키 삭제
         Cookie cookie = new Cookie("refresh", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
-
         response.addCookie(cookie);
+
+        // 6. 정상 로그아웃 응답
         response.setStatus(HttpServletResponse.SC_OK);
     }
 }

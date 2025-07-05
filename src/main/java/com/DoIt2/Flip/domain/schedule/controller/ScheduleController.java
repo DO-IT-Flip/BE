@@ -38,7 +38,7 @@ public class ScheduleController {
      *  특정 날짜(year, month, day)로 필터링
      * 예시: /api/schedules?year=2025&month=6&day=29
      */
-    @GetMapping(params = {"year", "month", "day"})
+    @GetMapping
     public ResponseEntity<List<ScheduleResponse>> getAllSchedules(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Integer year,

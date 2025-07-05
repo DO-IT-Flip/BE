@@ -1,5 +1,6 @@
 package com.DoIt2.Flip.domain.schedule.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -21,9 +22,11 @@ public class ScheduleRequest {
     private String participants;
 
     // 반복 일정 여부
+    @JsonProperty("isRepeat")
     private boolean isRepeat;
 
     //  태그 존재 여부
+    @JsonProperty("isExistTag")
     private boolean isExistTag;
 
     //  태그가 존재하면 사용되는 필드

@@ -54,7 +54,6 @@ public class ScheduleService {
         }
 
         Schedule saved = scheduleRepository.save(schedule);
-
         return ScheduleResponse.from(saved);
     }
 
@@ -104,7 +103,7 @@ public class ScheduleService {
             schedule.setTag(tagRepository.getReferenceById(request.getTagId()));
         } else{
             schedule.setColor(request.getColor());
-            schedule.setIcon(iconRepository.getReferenceById(request.getTagId()));
+            schedule.setIcon(iconRepository.getReferenceById(request.getIconId()));
         }
 
         return ScheduleResponse.from(schedule);

@@ -1,0 +1,48 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}  # default는 local
+
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update # prod: validate, dev: create, update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+      open-in-view: false
+      hibernate.query.plan_cache_max_size: 1
+
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  logging:
+    level:
+      root: INFO
+      com.DoIt2: DEBUG
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html  # 접속 경로 설정
+      tags-sorter: alpha  # 태그를 알파벳 순으로 정렬
+      operations-sorter: method   # 메서드(GET, POST...) 순 정렬
+      display-request-duration: true    # 요청 처리 시간 표시
+    default-produces-media-type: application/json
+    default-consumes-media-type: application/json

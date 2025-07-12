@@ -1,0 +1,45 @@
+spring:
+  profile:
+    active: prod
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5 # 총 20보다 항상 작게
+      minimum-idle: 2
+      connection-timeout: 30000 # 30 초 기다렸다 못 얻으면 예외
+      idle-timeout: 30000 # idle 커넥션 빨리 회수
+      max-lifetime: 600000 # 10 분마다 재생성해 누수 방지
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        query.plan_cache_max_size: 128
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html  # 접속 경로 설정
+      tags-sorter: alpha  # 태그를 알파벳 순으로 정렬
+      operations-sorter: method   # 메서드(GET, POST...) 순 정렬
+      display-request-duration: true    # 요청 처리 시간 표시
+    default-produces-media-type: application/json
+    default-consumes-media-type: application/json

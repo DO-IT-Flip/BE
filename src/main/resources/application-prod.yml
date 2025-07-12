@@ -30,8 +30,16 @@ spring:
         format_sql: true
         query.plan_cache_max_size: 128
 
-
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html  # 접속 경로 설정
+      tags-sorter: alpha  # 태그를 알파벳 순으로 정렬
+      operations-sorter: method   # 메서드(GET, POST...) 순 정렬
+      display-request-duration: true    # 요청 처리 시간 표시
+    default-produces-media-type: application/json
+    default-consumes-media-type: application/json

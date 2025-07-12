@@ -44,5 +44,6 @@ jobs:
           port: 22
           script: |
             cd /home/flip
+            sudo docker compose down flip || true
             sudo docker compose pull flip
             sudo docker compose up -d flip --no-deps

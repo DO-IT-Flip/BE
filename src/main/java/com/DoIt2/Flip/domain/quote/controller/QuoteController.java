@@ -1,6 +1,6 @@
 package com.DoIt2.Flip.domain.quote.controller;
 
-import com.DoIt2.Flip.domain.quote.entity.Quote;
+import com.DoIt2.Flip.domain.quote.dto.QuoteResponse;
 import com.DoIt2.Flip.domain.quote.service.QuoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ public class QuoteController {
     private final QuoteService quoteService;
 
     @GetMapping("/random")
-    public Quote getRandomQuote() {
+    public QuoteResponse getRandomQuote() {
         return quoteService.getRandomQuote();
     }
 }

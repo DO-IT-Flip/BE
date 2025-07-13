@@ -14,6 +14,9 @@ public class QuoteService {
 
     public QuoteResponse getRandomQuote() {
         Quote quote = quoteRepository.findRandomQuote();
+        if (quote == null) {
+            throw new IllegalStateException("등록된 명언이 없습니다.");
+        }
         return QuoteResponse.from(quote);
     }
 }

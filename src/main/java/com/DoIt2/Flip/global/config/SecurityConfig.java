@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
+import java.util.List;
 
 
 @Configuration
@@ -61,9 +63,9 @@ public class SecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
 
                 configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); // 허용할 주소
-                configuration.setAllowedMethods(Collections.singletonList("*")); // 허용할 HTTP methods
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 허용할 HTTP methods
+                configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With")); // 허용할 Header
                 configuration.setAllowCredentials(true);
-                configuration.setAllowedHeaders(Collections.singletonList("*")); // 허용할 Header
                 configuration.setMaxAge(3600L); // 허용 시간
 
                 configuration.setExposedHeaders(Collections.singletonList("Authorization")); // "Authorization" Header 허용
@@ -83,9 +85,17 @@ public class SecurityConfig {
 
         // 경로별 인가 작업
         http.authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 브라우저가 자동으로 보내는 Preflight 요청인 OPTIONS 요청 허용, 이게 막히면 CORS 오류 발생
                         .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/reissue").permitAll()
+                        .requestMatchers("/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .anyRequest().authenticated());
 
         // 직접 만든 JWTFilter 추가 (첫 번째 인자는 생성한 필터, 두 번째 인자는 필터를 넣을 위치)

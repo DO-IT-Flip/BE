@@ -271,7 +271,7 @@ docker compose up --build
 📝 Blog: [velog.io/@etion](https://velog.io/@etion/posts)  
 🎯 목표: 
 
-**왕우 | 백엔드 PA**  
+**왕우석 | 백엔드 PA**  
 연세대학교 미래캠퍼스 소프트웨어학부  
 📫 GitHub: []()  
 📝 Blog: []()  

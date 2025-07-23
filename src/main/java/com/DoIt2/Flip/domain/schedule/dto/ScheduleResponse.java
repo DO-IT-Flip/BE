@@ -40,8 +40,12 @@ public class ScheduleResponse {
                 .title(schedule.getTitle())
                 .location(schedule.getLocation())
                 .participants(schedule.getParticipants())
-                .color(schedule.getColor())
-                .iconId(schedule.getIcon() != null ? schedule.getIcon().getIconId() : null)
+                .color(schedule.isExistTag() && schedule.getTag() != null
+                        ? schedule.getTag().getColor()
+                        : schedule.getColor())
+                .iconId(schedule.isExistTag() && schedule.getTag() != null
+                        ? (schedule.getTag().getIcon() != null ? schedule.getTag().getIcon().getIconId() : null)
+                        : (schedule.getIcon() != null ? schedule.getIcon().getIconId() : null))
                 .tagId(schedule.getTag() != null ? schedule.getTag().getTagId() : null)
                 .isRepeat(schedule.isRepeat())
                 .isExistTag(schedule.isExistTag())

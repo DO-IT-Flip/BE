@@ -63,7 +63,7 @@ public class SecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
 
                 configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); // 허용할 주소
-                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 허용할 HTTP methods
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS")); // 허용할 HTTP methods
                 configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With")); // 허용할 Header
                 configuration.setAllowCredentials(true);
                 configuration.setMaxAge(3600L); // 허용 시간
